@@ -5,6 +5,8 @@ project(OpenGL_Test VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+cmake_policy(SET CMP0072 NEW)
+
 find_package( OpenGL REQUIRED )
 
 set( GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE )
@@ -15,7 +17,7 @@ set(GLFW_DIR ${PROJECT_SOURCE_DIR}/lib/glfw/)
 set(GL3W_DIR ${PROJECT_SOURCE_DIR}/lib/gl3w/)
 
 #Some blackmagic from an issue (https://github.com/skaslev/gl3w/issues/66) on the github page of gl3w.
-execute_process(COMMAND python gl3w_gen.py --root ${PROJECT_BINARY_DIR}/lib/gl3w WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/lib/gl3w)
+execute_process(COMMAND python3 gl3w_gen.py --root ${PROJECT_BINARY_DIR}/lib/gl3w WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/lib/gl3w)
 
 add_executable(main ${PROJECT_SOURCE_DIR}/src/main.cpp)
 
