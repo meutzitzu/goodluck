@@ -1,9 +1,42 @@
 #include <stdio.h>
+#include <iostream>
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 
 const int k_MinMajorOpenGLVersion = 4;
 const int k_MinMinorOpenGLVersion = 0;
+
+int g_width = 1080;
+int g_height = 720;
+
+const char *vertexShaderSource = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "}\0";
+
+const char *fragmentShaderSource = "#version 330 core\n"
+	"out vec4 FragColor;\n"
+	"uniform vec2 u_resolution;\n"
+	"void main()\n"
+	"{\n"
+	"	vec2 uv = 4*(gl_FragCoord.xy/u_resolution.xy - vec2(0.5f, 0.5f));\n"
+	"	vec2 c = uv;\n"
+	"	vec2 z = vec2(0.0f, 0.0f);\n"
+	"	int i = 0;\n"
+	"	int I = 0;\n"
+	"	for(i=0; i<=512; ++i){\n"
+	"		z = vec2(z.x*z.x-z.y*z.y, 2*z.x*z.y) + c;\n"
+	"		if( length(z) > 2) break;\n"
+	"	}\n"
+//	"	vec2 color = vec2( sqrt(c.x*c.x + c.y*c.y), 1.0f);\n"	
+	"	float value = (i/512.0f);\n"
+	"	vec2 color = vec2( sqrt(value), 1.0f);\n"	
+//	"	FragColor = vec4(length(z), length(z), length(z) , color.y);\n"
+	"	FragColor = vec4(color.xxxy);\n"
+//	"	FragColor = vec4(sin(color.x*12)/2+0.5, sin(color.x*19)/2+0.5, sin(color.x*23)/2+0.5, color.y);\n"
+	"}\0";
 
 //Error callback function for GLFW to report errors.
 void error_callback(int error, const char* description)
@@ -18,6 +51,32 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+//resize handling or something idk
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	g_width = width;
+	g_height = height;
+	glViewport(0, 0, width, height);
+}
+
+// GEOMETRY
+float triangle_vertices[] = {
+    -0.5f, -0.5f, 0.0f,
+     0.5f, -0.5f, 0.0f,
+     0.0f,  0.5f, 0.0f
+};  
+
+float rec_vertices[] = {
+     1.0f,  1.0f, 0.0f,  // top right
+     1.0f, -1.0f, 0.0f,  // bottom right
+    -1.0f, -1.0f, 0.0f,  // bottom left
+    -1.0f,  1.0f, 0.0f   // top left 
+};
+
+unsigned int indices[] = {  // note that we start from 0!
+    0, 1, 3,   // first triangle
+    1, 2, 3    // second triangle
+};  
 
 int main(){
 	//Initialization of glfw.
@@ -34,7 +93,7 @@ int main(){
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, k_MinMinorOpenGLVersion);
 
 	//Create windows
-	GLFWwindow* window = glfwCreateWindow(640, 480, "A window", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(g_width, g_height, "A window", NULL, NULL);
 
 	//Error-checking
 	if (!window)
@@ -47,6 +106,8 @@ int main(){
 	glfwMakeContextCurrent(window);
 	//Enable keypress handling.
 	glfwSetKeyCallback(window, key_callback);
+	//Enable resizing or something idk
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	//Initialize GL3W + some error checking.
 	GLenum err = gl3wInit();
@@ -55,13 +116,112 @@ int main(){
 		return -1;
 	}
 
+	// set the viewport size or something (lmao i have no idea what I'm doing)
+	glViewport(0, 0, g_width, g_height);
+
+	// something someting vertex shader whatevs
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);  
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_vertices), triangle_vertices, GL_STATIC_DRAW);
+
+	unsigned int EBO;
+	glGenBuffers(1, &EBO);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	unsigned int vertexShader;
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glCompileShader(vertexShader);
+
+	
+	int  success;
+	char infoLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	
+	if(!success)
+	{
+		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	}
+
+	// something something fragment shader
+	unsigned int fragmentShader;
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	glCompileShader(fragmentShader);
+
+
+	// something something Shader Program
+	unsigned int shaderProgram;
+	shaderProgram = glCreateProgram();
+
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if(!success) {
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::CEVA_SE_FUTU\n" << infoLog << std::endl;
+	}
+
+	int u_resolutionLocation = glGetUniformLocation(shaderProgram, "u_resolution");
+	glUseProgram(shaderProgram);
+	glUniform2f(u_resolutionLocation, (float)g_height, (float)g_width);
+
+	//we can delete these after linking them
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);  
+	
+
+	//linking the vertex data
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);  
+
+	 // ..:: Initialization code :: ..
+	// 1. bind Vertex Array Object
+	glBindVertexArray(VAO);
+	// 2. copy our vertices array in a vertex buffer for OpenGL to use
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rec_vertices), rec_vertices, GL_STATIC_DRAW);
+	// 3. copy our index array in a element buffer for OpenGL to use
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	// 4. then set the vertex attributes pointers
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);   
+
 	//Main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		//Write you openGL code here.
+
+		
+		glClearColor(0.9f, 0.3f, 0.2f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		// 4. draw the object
+		glUseProgram(shaderProgram);
+		glUniform2f(u_resolutionLocation, (float)g_width, (float)g_height);
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+		//Rendering or something idk
+		glfwSwapBuffers(window);
+		
+		//Event checking or something idk
 		glfwPollEvents();
 	}
 
 	//Terminate glfw before returning.
 	glfwTerminate();
+	return 0;
 }
