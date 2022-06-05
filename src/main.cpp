@@ -24,7 +24,7 @@ struct view
 view g_ViewportRaw = { 4.0, 0.0, 0.0};
 view g_ViewportSmooth = { 1.0, 0.0, 0.0};
 
-float g_translate_speed = 0.005;
+float g_translate_speed = 0.001;
 float g_scale_speed = 0.005;
 
 struct 
@@ -47,11 +47,34 @@ const char *fragmentShaderSource = "#version 400 core\n"
 	"uniform vec2 u_offset;\n"
 	"uniform float u_scale;\n"
 	"float aspect = u_resolution.x/u_resolution.y;\n"
+	"\n"
+	"\n"
+	"\n"
+	"\n"
+	"vec3 hue2rgb(float hue)\n"
+	"{\n"
+	"	hue = mod(hue, 1.0f); //only use fractional part of hue, making it loop\n"
+	"	float r = abs(hue * 6 - 3) - 1; //red\n"
+	"	float g = 2 - abs(hue * 6 - 2); //green\n"
+	"	float b = 2 - abs(hue * 6 - 4); //blue\n"
+	"	vec3 rgb = vec3(r,g,b); //combine components\n"
+	"	rgb = clamp(rgb, 0.0f, 1.0f); //clamp between 0 and 1\n"
+	"	return rgb;\n"
+	"}\n"
+	"vec3 hsv(vec3 hsv)\n"
+	"{\n"
+	"    vec3 rgb = hue2rgb(hsv.x); //apply hue\n"
+	"//    rgb = mix(1, rgb, hsv.y); //apply saturation\n"
+	"    rgb = (1.0f -hsv.y)*vec3(1.0f, 1.0f, 1.0f) + hsv.y*rgb; //apply saturation\n"
+	"    rgb = rgb * hsv.z; //apply value\n"
+	"    return rgb;\n"
+	"}\n"
+	
 	"void main()\n"
 	"{\n"
 	"	vec2 uv = u_scale*(gl_FragCoord.xy/u_resolution.xy - vec2(0.5f, 0.5f));\n"
 	"	uv.x *= aspect;\n"
-	"	//uv += u_offset;\n"
+	"//	uv += u_offset;\n"
 	"	vec2 c = u_offset;\n"
 	"	vec2 z = uv;\n"
 	"	int i = 0;\n"
@@ -60,12 +83,9 @@ const char *fragmentShaderSource = "#version 400 core\n"
 	"		z = vec2(z.x*z.x-z.y*z.y, 2*z.x*z.y) + c;\n"
 	"		if( length(z) > 2) break;\n"
 	"	}\n"
-//	"	vec2 color = vec2( sqrt(c.x*c.x + c.y*c.y), 1.0f);\n"	
-	"	float value = (i/1024.0f);\n"
-	"	vec2 color = vec2( sqrt(value), 1.0f);\n"	
-//	"	FragColor = vec4(length(z), length(z), length(z) , color.y);\n"
-	"	FragColor = vec4(color.xxxy);\n"
-//	"	FragColor = vec4(sin(color.x*12)/2+0.5, sin(color.x*19)/2+0.5, sin(color.x*23)/2+0.5, color.y);\n"
+	"	float value = sqrt(i/1024.0f);\n"
+	"	vec3 color = hsv(vec3(6*value, 1-value, 1-value));\n"	
+	"	FragColor = vec4(color.xyz, 1.0f);\n"
 	"}\0";
 
 //Error callback function for GLFW to report errors.
