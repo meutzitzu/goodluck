@@ -9,6 +9,20 @@ const int k_MinMinorOpenGLVersion = 0;
 int g_width = 1080;
 int g_height = 720;
 
+float g_scale = 4.0f;
+float g_Xoffset = 0.0;
+float g_Yoffset = 0.0;
+
+float g_translate_speed = 0.005;
+float g_scale_speed = 0.005;
+
+struct 
+{
+	float scaler = 1.0f;
+	float XTranslator = 0.0f;
+	float YTranslator = 0.0f;
+} g_ViewportControl;
+
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
@@ -16,22 +30,27 @@ const char *vertexShaderSource = "#version 330 core\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
 
-const char *fragmentShaderSource = "#version 330 core\n"
+const char *fragmentShaderSource = "#version 400 core\n"
 	"out vec4 FragColor;\n"
 	"uniform vec2 u_resolution;\n"
+	"uniform vec2 u_offset;\n"
+	"uniform float u_scale;\n"
+	"float aspect = u_resolution.x/u_resolution.y;\n"
 	"void main()\n"
 	"{\n"
-	"	vec2 uv = 4*(gl_FragCoord.xy/u_resolution.xy - vec2(0.5f, 0.5f));\n"
+	"	vec2 uv = u_scale*(gl_FragCoord.xy/u_resolution.xy - vec2(0.5f, 0.5f));\n"
+	"	uv.x *= aspect;\n"
+	"	uv += u_offset;\n"
 	"	vec2 c = uv;\n"
 	"	vec2 z = vec2(0.0f, 0.0f);\n"
 	"	int i = 0;\n"
 	"	int I = 0;\n"
-	"	for(i=0; i<=512; ++i){\n"
+	"	for(i=0; i<=1024; ++i){\n"
 	"		z = vec2(z.x*z.x-z.y*z.y, 2*z.x*z.y) + c;\n"
 	"		if( length(z) > 2) break;\n"
 	"	}\n"
 //	"	vec2 color = vec2( sqrt(c.x*c.x + c.y*c.y), 1.0f);\n"	
-	"	float value = (i/512.0f);\n"
+	"	float value = (i/1024.0f);\n"
 	"	vec2 color = vec2( sqrt(value), 1.0f);\n"	
 //	"	FragColor = vec4(length(z), length(z), length(z) , color.y);\n"
 	"	FragColor = vec4(color.xxxy);\n"
@@ -49,6 +68,51 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+	if( action == GLFW_PRESS || action == GLFW_RELEASE)
+	{
+		int sign = (action == GLFW_PRESS ? 1 : -1);
+		switch (key)
+		{
+			case GLFW_KEY_W:
+			{
+				g_ViewportControl.YTranslator += sign*g_translate_speed;
+				break;
+			}
+			case GLFW_KEY_A:
+			{
+				g_ViewportControl.XTranslator -= sign*g_translate_speed;
+				break;
+			}
+			case GLFW_KEY_S:
+			{
+				g_ViewportControl.YTranslator -= sign*g_translate_speed;
+				break;
+			}
+			case GLFW_KEY_D:
+			{
+				g_ViewportControl.XTranslator += sign*g_translate_speed;
+				break;
+			}
+			case GLFW_KEY_LEFT_SHIFT:
+			{
+				g_ViewportControl.scaler += sign*g_scale_speed;
+				break;
+			}
+			case GLFW_KEY_SPACE:
+			{
+				g_ViewportControl.scaler -= sign*g_scale_speed;
+				break;
+			}
+		}
+	}
+}
+
+void applyControl()
+{
+	g_scale *= g_ViewportControl.scaler;
+	g_Xoffset += g_scale*g_ViewportControl.XTranslator;
+	g_Yoffset += g_scale*g_ViewportControl.YTranslator;
 }
 
 //resize handling or something idk
@@ -170,6 +234,8 @@ int main(){
 	}
 
 	int u_resolutionLocation = glGetUniformLocation(shaderProgram, "u_resolution");
+	int u_scaleLocation = glGetUniformLocation(shaderProgram, "u_scale");
+	int u_offsetLocation = glGetUniformLocation(shaderProgram, "u_offset");
 	glUseProgram(shaderProgram);
 	glUniform2f(u_resolutionLocation, (float)g_height, (float)g_width);
 
@@ -203,13 +269,16 @@ int main(){
 	{
 		//Write you openGL code here.
 
-		
+		applyControl();
+
 		glClearColor(0.9f, 0.3f, 0.2f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// 4. draw the object
 		glUseProgram(shaderProgram);
 		glUniform2f(u_resolutionLocation, (float)g_width, (float)g_height);
+		glUniform1f(u_scaleLocation, g_scale);
+		glUniform2f(u_offsetLocation, g_Xoffset, g_Yoffset);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
