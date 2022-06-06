@@ -8,9 +8,9 @@ As of now this project loads a hard-coded fragment shader that draws the Mandelb
 
 It also has viewport controls with the following default keymap
 
--`w`, `a`, `s`, `d` **moves** the view
--`Space` to **zoom in**
--`Shift` to **zoom out**
+- `w`, `a`, `s`, `d` **moves** the view
+- `Space` to **zoom in**
+- `Shift` to **zoom out**
 
 ***NEW !*** press `Tab` to switch to and from the corresponding Julia set
 
