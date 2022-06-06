@@ -36,7 +36,7 @@ struct
 	float YTranslator = 0.0f;
 } g_ViewportControl;
 
-const char *vertexShaderSource = "#version 330 core\n"
+const char *vertexShaderSource = "#version 400 \n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
     "{\n"
@@ -74,18 +74,18 @@ const char *fragmentShaderSource = "#version 400 core\n"
 	
 	"void main()\n"
 	"{\n"
-	"	vec2 uv = u_scale*(gl_FragCoord.xy/u_resolution.xy - vec2(0.5f, 0.5f));\n"
-	"	uv.x *= aspect;\n"
+	"	dvec2 uv = dvec2(u_scale)*(dvec2(gl_FragCoord.xy/u_resolution.xy) - dvec2(0.5f, 0.5f));\n"
+	"	uv.x *= double(aspect);\n"
 	"	uv += mode==1 ? u_offset : vec2(0.0f, 0.0f);\n"
-	"	vec2 c = mode==1 ? uv : u_offset ;\n"
-	"	vec2 z = mode==1 ? vec2(0.0f, 0.0f) : uv;\n"
+	"	dvec2 c = mode==1 ? uv : dvec2(u_offset) ;\n"
+	"	dvec2 z = mode==1 ? dvec2(0.0f, 0.0f) : uv;\n"
 	"	int i = 0;\n"
 	"	int I = 0;\n"
-	"	for(i=0; i<=1024; ++i){\n"
+	"	for(i=0; i<=32; ++i){\n"
 	"		z = vec2(z.x*z.x-z.y*z.y, 2*z.x*z.y) + c;\n"
 	"		if( length(z) > 2) break;\n"
 	"	}\n"
-	"	float value = sqrt(i/1024.0f);\n"
+	"	float value = sqrt(i/32.0f);\n"
 	"	vec3 color = hsv(vec3(6*value, 1-value, 1-value));\n"	
 	"	FragColor = vec4(color.xyz, 1.0f);\n"
 	"}\0";
