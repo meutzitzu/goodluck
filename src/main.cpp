@@ -21,10 +21,12 @@ struct view
 	vec2 offset;
 };
 
+int g_mode = 1;
+
 view g_ViewportRaw = { 4.0, 0.0, 0.0};
 view g_ViewportSmooth = { 1.0, 0.0, 0.0};
 
-float g_translate_speed = 0.001;
+float g_translate_speed = 0.002;
 float g_scale_speed = 0.005;
 
 struct 
@@ -46,6 +48,7 @@ const char *fragmentShaderSource = "#version 400 core\n"
 	"uniform vec2 u_resolution;\n"
 	"uniform vec2 u_offset;\n"
 	"uniform float u_scale;\n"
+	"uniform int mode;\n"
 	"float aspect = u_resolution.x/u_resolution.y;\n"
 	"\n"
 	"\n"
@@ -64,7 +67,6 @@ const char *fragmentShaderSource = "#version 400 core\n"
 	"vec3 hsv(vec3 hsv)\n"
 	"{\n"
 	"    vec3 rgb = hue2rgb(hsv.x); //apply hue\n"
-	"//    rgb = mix(1, rgb, hsv.y); //apply saturation\n"
 	"    rgb = (1.0f -hsv.y)*vec3(1.0f, 1.0f, 1.0f) + hsv.y*rgb; //apply saturation\n"
 	"    rgb = rgb * hsv.z; //apply value\n"
 	"    return rgb;\n"
@@ -74,9 +76,9 @@ const char *fragmentShaderSource = "#version 400 core\n"
 	"{\n"
 	"	vec2 uv = u_scale*(gl_FragCoord.xy/u_resolution.xy - vec2(0.5f, 0.5f));\n"
 	"	uv.x *= aspect;\n"
-	"//	uv += u_offset;\n"
-	"	vec2 c = u_offset;\n"
-	"	vec2 z = uv;\n"
+	"	uv += mode==1 ? u_offset : vec2(0.0f, 0.0f);\n"
+	"	vec2 c = mode==1 ? uv : u_offset ;\n"
+	"	vec2 z = mode==1 ? vec2(0.0f, 0.0f) : uv;\n"
 	"	int i = 0;\n"
 	"	int I = 0;\n"
 	"	for(i=0; i<=1024; ++i){\n"
@@ -135,6 +137,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 				g_ViewportControl.scaler -= sign*g_scale_speed;
 				break;
 			}
+			case GLFW_KEY_TAB:
+			{
+				g_mode = ( sign > 0 ? 1-g_mode : g_mode);
+				break;
+			}
 		}
 	}
 }
@@ -146,8 +153,8 @@ void applyControl()
 	g_ViewportRaw.offset.y += g_ViewportRaw.scale*g_ViewportControl.YTranslator;
 
 	g_ViewportSmooth.scale += 0.05*( g_ViewportRaw.scale - g_ViewportSmooth.scale);
-	g_ViewportSmooth.offset.x += 0.05*( g_ViewportRaw.offset.x - g_ViewportSmooth.offset.x);
-	g_ViewportSmooth.offset.y += 0.05*( g_ViewportRaw.offset.y - g_ViewportSmooth.offset.y);
+	g_ViewportSmooth.offset.x += 0.08*( g_ViewportRaw.offset.x - g_ViewportSmooth.offset.x);
+	g_ViewportSmooth.offset.y += 0.08*( g_ViewportRaw.offset.y - g_ViewportSmooth.offset.y);
 }
 
 //resize handling or something idk
@@ -271,6 +278,7 @@ int main(){
 	int u_resolutionLocation = glGetUniformLocation(shaderProgram, "u_resolution");
 	int u_scaleLocation = glGetUniformLocation(shaderProgram, "u_scale");
 	int u_offsetLocation = glGetUniformLocation(shaderProgram, "u_offset");
+	int u_modeLocation = glGetUniformLocation(shaderProgram, "mode");
 	glUseProgram(shaderProgram);
 	glUniform2f(u_resolutionLocation, (float)g_height, (float)g_width);
 
@@ -314,6 +322,7 @@ int main(){
 		glUniform2f(u_resolutionLocation, (float)g_width, (float)g_height);
 		glUniform1f(u_scaleLocation, g_ViewportSmooth.scale);
 		glUniform2f(u_offsetLocation, g_ViewportSmooth.offset.x, g_ViewportSmooth.offset.y);
+		glUniform1i(u_modeLocation, g_mode);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
