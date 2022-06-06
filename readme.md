@@ -12,6 +12,8 @@ It also has viewport controls with the following default keymap
 -`Space` to **zoom in**
 -`Shift` to **zoom out**
 
+***NEW !*** press `Tab` to switch to and from the corresponding Julia set
+
 ## Install instructions
 
 If you're in Windows, just install CMake CLI and ninja manually and then run `./build.bat` to compile and `./build/main` to run
