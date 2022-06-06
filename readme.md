@@ -1,32 +1,31 @@
-# OpenGL_GLEW_GLFW_template #
+# Why the name ?
 
-Basic OpenGL project template for c++ with CMake, glfw and gl3w meant to work out of the box on Windows and Linux and eliminate as much frustration as possible in the setup phase of any OpenGL project.
+#### there's a saying that GL in OpenGL stands for **goodluck** (because you're gonna need it)
 
-## Cloning ##
-You should clone the repository with\
-`git clone --recursive https://github.com/Kravantokh/OpenGL_GLEW_GLFW_template/`\
-\
-If you have already cloned it without `--recursive` you may download the submodules with\
-`git submodule init` and then\
-`git submodule update`.
+## Features
 
-## Current code ##
+As of now this project loads a hard-coded fragment shader that draws the Mandelbrot set
 
-The file `src/main.cpp` contains a basic example code which creates an openGL context and opens it in a window with the help of glfw.
+It also has viewport controls with the following default keymap
 
-## Prerequisites ##
-* CMake (obviously)
-* GNU GCC: g++ (mingw on windows)
-* ninja
-* glu\*
+-`w`, `a`, `s`, `d` **moves** the view
+-`Space` to **zoom in**
+-`Shift` to **zoom out**
 
+## Install instructions
 
-\*Linux-only dependency - may be installed with the package manager, in may case the command was `sudo pacman -S glu`
+If you're in Windows, just install CMake CLI and ninja manually and then run `./build.bat` to compile and `./build/main` to run
 
-## Build process ##
-* Windows: run `build.bat`
-* Linux: run `build.sh`
+If you're on Linux run these commands 
+```bash
+git clone --recursive https://github.com/meutzitzu/goodluck.git
+cd goodluck
+sudo apt install ninja-build
+sudo apt install xorg-dev
+sudo apt install libglu1-dev
+./build.sh
+```
 
-On linux don't forget to run `chmod +x build.sh`.
+and run using `./build/main`
 
-Until now the build process has been tested on Windows 10 with the mentioned prerequisites.
+(it is assumed you are using a Debian-based distro in the prerequisite installation commands. If this is not the case then it is also assumed you can easily figure it out on your own 😉)
