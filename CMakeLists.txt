@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22.2)
+cmake_minimum_required(VERSION 3.16)
 
 project(OpenGL_Template VERSION 1.0)
 
@@ -23,6 +23,7 @@ add_subdirectory(${GLFW_DIR})
 add_subdirectory(${BU_GLW_DIR})
 
 include_directories(${GLFW_DIR}/include)
+include_directories(${BU_GLW_DIR}/include)
 
 # Should examples be built?
 if(DEFINED BUILD_EXAMPLES)
@@ -30,8 +31,8 @@ if(DEFINED BUILD_EXAMPLES)
 endif()
 
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/src)
+
 # Add your files here
-
-
 
 
