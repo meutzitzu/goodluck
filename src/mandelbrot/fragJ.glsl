@@ -27,7 +27,7 @@ void main()
 	float aspect_ratio = float(u_resolution.x)/u_resolution.y;
 	uv.x *= aspect_ratio;
 	uv *= u_view.z;
-	uv += u_view.xy;
+	uv += u_CZ.xy;
 	int MSAA = 8;
 	int l = 0;
 //	int maxiters = int(floor(min(10.0*u_time, 512)));
@@ -36,11 +36,11 @@ void main()
 	for(int s=0; s<MSAA; ++s)
 	{	
 		vec2 aux = uv + vec2(random(vec2((s+1))))/u_resolution*1*u_view.z;
-		vec2 z = aux + u_CZ.yw;
+		vec2 z = aux + u_CZ.zw;
 //		vec2 c = u_time*0.05*vec2(cos(u_time), sin(u_time));
 //		vec2 c = aux + u_CZ.xy;
 		vec2 c = u_view.xy;
-		for( int i=0; i<maxiters; ++i)
+		for( int i=1; i<maxiters; ++i)
 		{
 			aux = z;
 			z.x = z.x*z.x -z.y*z.y;

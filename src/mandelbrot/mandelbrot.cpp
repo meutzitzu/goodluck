@@ -28,7 +28,20 @@ struct {
 	} vpPosition;
 	float vpScale = 1.0;
 	float vpRotation = 0.0;
+
+	struct 
+	{
+		float x = 0.0;
+		float y = 0.0;
+	} pOffset;
+
+	struct 
+	{
+		float x = 0.0;
+		float y = 0.0;
+	} pPosition;
 } camera;
+
 
 struct
 {
@@ -36,6 +49,10 @@ struct
 	bool J = false;
 	bool K = false;
 	bool L = false;
+	bool A = false;
+	bool S = false;
+	bool D = false;
+	bool F = false;
 	bool space = false;
 	bool shift = false;
 }controlKeys;
@@ -133,9 +150,7 @@ int main(void){
 		glClearColor(0.2f, 0.2f, 0.2f, 0.5f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		prog.use();
 
-		prog.setUniform((int)Uniforms::u_time, (float)t); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 
 		camera.vpOffset.x = ( camera.vpOffset.x + camera.vpScale*(-CAMERA2D_TRANSLATION_SPEED*controlKeys.H + CAMERA2D_TRANSLATION_SPEED*controlKeys.L));
 
@@ -144,9 +159,23 @@ int main(void){
 		camera.vpPosition.x = (1.0-CAMERA2D_TRANSLATION_SMOOTH)*camera.vpPosition.x + CAMERA2D_TRANSLATION_SMOOTH*camera.vpOffset.x;
 		camera.vpPosition.y = (1.0-CAMERA2D_TRANSLATION_SMOOTH)*camera.vpPosition.y + CAMERA2D_TRANSLATION_SMOOTH*camera.vpOffset.y;
 
+		camera.pOffset.x = ( camera.pOffset.x + camera.vpScale*(-CAMERA2D_TRANSLATION_SPEED*controlKeys.A + CAMERA2D_TRANSLATION_SPEED*controlKeys.F));
+		camera.pOffset.y = ( camera.pOffset.y + camera.vpScale*(-CAMERA2D_TRANSLATION_SPEED*controlKeys.S + CAMERA2D_TRANSLATION_SPEED*controlKeys.D));
+
+		camera.pPosition.x = (1.0-CAMERA2D_TRANSLATION_SMOOTH)*camera.pPosition.x + CAMERA2D_TRANSLATION_SMOOTH*camera.pOffset.x;
+		camera.pPosition.y = (1.0-CAMERA2D_TRANSLATION_SMOOTH)*camera.pPosition.y + CAMERA2D_TRANSLATION_SMOOTH*camera.pOffset.y;
+
 		camera.vpScale *= (1.0 + CAMERA2D_SCALE_SPEED*(controlKeys.shift - controlKeys.space));
 
+
+		prog.use();
+
+		prog.setUniform((int)Uniforms::u_time, (float)t); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
+
+
 		prog.setUniform((int)Uniforms::u_view, camera.vpPosition.x, camera.vpPosition.y, camera.vpScale, camera.vpRotation); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
+
+		prog.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, camera.pPosition.x, camera.pPosition.y); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 		
 
 
@@ -158,6 +187,9 @@ int main(void){
 		prog2.setUniform((int)Uniforms::u_time, (float)t); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 
 		prog2.setUniform((int)Uniforms::u_view, camera.vpPosition.x, camera.vpPosition.y, camera.vpScale, camera.vpRotation); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
+
+		prog2.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, camera.pPosition.x, camera.pPosition.y); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
+
 		/* Draw the triangle mesh*/		
 
 
@@ -198,6 +230,18 @@ static void glfw_key_handler(GLFWwindow* window, int key, int scancode, int acti
 		break;
 		case GLFW_KEY_L:
 			keyState = &controlKeys.L;
+		break;
+		case GLFW_KEY_A:
+			keyState = &controlKeys.A;
+		break;
+		case GLFW_KEY_S:
+			keyState = &controlKeys.S;
+		break;
+		case GLFW_KEY_D:
+			keyState = &controlKeys.D;
+		break;
+		case GLFW_KEY_F:
+			keyState = &controlKeys.F;
 		break;
 		case GLFW_KEY_SPACE:
 			keyState = &controlKeys.space;
