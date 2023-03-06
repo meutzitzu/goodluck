@@ -38,7 +38,7 @@ void main()
 		vec2 aux = uv + vec2(random(vec2((s+1))))/u_resolution*1*u_view.z;
 		vec2 z = aux + u_CZ.yw;
 //		vec2 c = u_time*0.05*vec2(cos(u_time), sin(u_time));
-		vec2 c = aux + u_CZ.xy;
+		vec2 c = aux;
 		for( int i=0; i<maxiters; ++i)
 		{
 			aux = z;

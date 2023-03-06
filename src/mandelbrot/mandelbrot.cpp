@@ -175,7 +175,7 @@ int main(void){
 
 		prog.setUniform((int)Uniforms::u_view, camera.vpPosition.x, camera.vpPosition.y, camera.vpScale, camera.vpRotation); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 
-		prog.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, camera.pPosition.x, camera.pPosition.y); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
+		prog.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, 0.0f, 0.0f); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 		
 
 
@@ -188,7 +188,7 @@ int main(void){
 
 		prog2.setUniform((int)Uniforms::u_view, camera.vpPosition.x, camera.vpPosition.y, camera.vpScale, camera.vpRotation); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 
-		prog2.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, camera.pPosition.x, camera.pPosition.y); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
+		prog2.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, 0.0f, 0.0f); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 
 		/* Draw the triangle mesh*/		
 
