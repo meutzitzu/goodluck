@@ -8,10 +8,10 @@
 static void glfw_error_handler(int error, const char* message);
 static void glfw_key_handler(GLFWwindow*, int, int, int, int);
 
-#define CAMERA2D_TRANSLATION_SPEED 0.05
-#define CAMERA2D_TRANSLATION_SMOOTH 0.1
-#define CAMERA2D_SCALE_SPEED 0.05
-#define CAMERA2D_SCALE_SMOOTH 0.05
+#define CAMERA2D_TRANSLATION_SPEED 0.005
+#define CAMERA2D_TRANSLATION_SMOOTH 0.01
+#define CAMERA2D_SCALE_SPEED 0.005
+#define CAMERA2D_SCALE_SMOOTH 0.005
 #define CAMERA2D_ROTATION_SPEED 0.05
 
 
@@ -89,11 +89,28 @@ int main(void){
 	float verticesM[] =
 	{ 	
 		-1.0,  1.0, 0.0,
-		 1.0,  1.0, 0.0,
-		 1.0, -1.0, 0.0,
+		 0.0,  1.0, 0.0,
+		 0.0, -1.0, 0.0,
 		-1.0,  1.0, 0.0,
 		-1.0, -1.0, 0.0,
+		 0.0, -1.0, 0.0,
+
+		 0.0,  1.0, 0.0,
+		 1.0,  1.0, 0.0,
 		 1.0, -1.0, 0.0,
+		 0.0, -1.0, 0.0,
+		 1.0,  1.0, 0.0,
+		 1.0, -1.0, 0.0,
+
+		 0.5,  0.01, 0.0, 
+		 0.5, -0.01, 0.0, 
+		 0.51,  0.0, 0.0, 
+		 0.49,  0.0, 0.0, 
+
+		-0.5,  0.01, 0.0, 
+		-0.5, -0.01, 0.0, 
+		-0.51,  0.0, 0.0, 
+		-0.49,  0.0, 0.0, 
 	};
 
 	float verticesJ[] =
@@ -103,7 +120,22 @@ int main(void){
 		 0.5, -0.5, 0.0,
 	};
 
+	float line_vertices[] = 
+	{
+		-0.1, 0.5, 
+		 0.1, 0.5, 
+		 0.0, 0.6, 
+		 0.0, 0.4, 
+
+	};
+
+	VBO lvbo(&line_vertices);	
+	VAO lvao;
+	lvao.add_attribute(2);
+	lvao.bind_attributes();
+
 	enum class Uniforms{ u_resolution = 0, u_time = 1, u_view = 2, u_CZ = 3 };
+	ShaderProgram progColor("./vert.glsl", "./fragColor.glsl");
 
 	VBO vbo(&verticesM);	
 	VAO vao;
@@ -119,7 +151,7 @@ int main(void){
 	prog.registerUniform("u_CZ");
 	prog.finishUniformRegistration();
 
-	prog.setUniform((int)Uniforms::u_resolution, (unsigned int)1920, (unsigned int)1080); /* ID 1 is VerticalOffset. Same goes for the post-fix.*/
+	prog.setUniform((int)Uniforms::u_resolution, (unsigned int)width, (unsigned int)height); /* ID 1 is VerticalOffset. Same goes for the post-fix.*/
 
 	VBO vbo2(&verticesJ);	
 	VAO vao2;
@@ -136,7 +168,7 @@ int main(void){
 	prog2.registerUniform("u_CZ");
 	prog2.finishUniformRegistration();
 
-	prog2.setUniform((int)Uniforms::u_resolution, (unsigned int)1920, (unsigned int)1080); /* ID 1 is VerticalOffset. Same goes for the post-fix.*/
+	prog2.setUniform((int)Uniforms::u_resolution, (unsigned int)width, (unsigned int)height); /* ID 1 is VerticalOffset. Same goes for the post-fix.*/
 
 	/* Enable Vsync*/
 	glfwSwapInterval(1);
@@ -175,11 +207,11 @@ int main(void){
 
 		prog.setUniform((int)Uniforms::u_view, camera.vpPosition.x, camera.vpPosition.y, camera.vpScale, camera.vpRotation); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 
-		prog.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, 0.0f, 0.0f); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
+		prog.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, camera.pPosition.x, camera.pPosition.y); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 		
 
 
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArrays(GL_TRIANGLES, 5, 6);
 
 		vao.bind();
 		prog2.use();
@@ -188,14 +220,16 @@ int main(void){
 
 		prog2.setUniform((int)Uniforms::u_view, camera.vpPosition.x, camera.vpPosition.y, camera.vpScale, camera.vpRotation); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 
-		prog2.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, 0.0f, 0.0f); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
+		prog2.setUniform((int)Uniforms::u_CZ, camera.pPosition.x, camera.pPosition.y, camera.pPosition.x, camera.pPosition.y); /* ID 0 is the Color variable. The f post-fix must also be used, because otherwise the compiler can't deduce which function we wish to call.*/
 
 		/* Draw the triangle mesh*/		
 
-
 		/* Draw the triangle mesh*/		
-		glDrawArrays(GL_TRIANGLES, 2, 6);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
+		progColor.use();
+
+		glDrawArrays( GL_LINES, 12, 8);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -205,7 +239,6 @@ int main(void){
 	glfwTerminate();
 	return EXIT_SUCCESS;
 }
-
 
 static void glfw_error_handler(int error, const char* message){
 	fprintf(stderr, "Glfw error number %d has appeared - %s\n", error, message);
