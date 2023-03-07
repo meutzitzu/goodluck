@@ -25,6 +25,15 @@ void main()
 {
 	vec2 uv = vec2(gl_FragCoord.x / u_resolution.x, gl_FragCoord.y / u_resolution.y)*2 + vec2(-1.0);
 	float aspect_ratio = float(u_resolution.x)/u_resolution.y;
+	uv.x -= 0.5;
+
+
+
+
+
+
+
+
 	uv.x *= aspect_ratio;
 	uv *= u_view.z;
 	uv += u_view.xy;
@@ -36,9 +45,9 @@ void main()
 	for(int s=0; s<MSAA; ++s)
 	{	
 		vec2 aux = uv + vec2(random(vec2((s+1))))/u_resolution*1*u_view.z;
-		vec2 z = aux + u_CZ.yw;
+		vec2 z = aux + u_CZ.zw;
 //		vec2 c = u_time*0.05*vec2(cos(u_time), sin(u_time));
-		vec2 c = aux + u_CZ.xy;
+		vec2 c = aux;
 		for( int i=0; i<maxiters; ++i)
 		{
 			aux = z;
@@ -51,6 +60,7 @@ void main()
 	}
 
 //	vec3 col = hsv2rgb(vec3(3*h, sqrt(h), sqrt(h)));
+
 	vec3 col = vec3((h));
 
 	FragColor = vec4(col, 1.0);
